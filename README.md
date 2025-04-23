@@ -44,7 +44,11 @@ docker exec -it flink-window-dgim-traffic_kafka_1 kafka-console-consumer.sh --bo
 ```
 
 ```bash
-docker exec -it flink-window-dgim-traffic_kafka_1 kafka-console-consumer.sh --bootstrap-server flink-window-dgim-traffic_kafka_1:9093 --topic output-topic --from-beginning
+docker exec -it flink-window-dgim-traffic_kafka_1 kafka-console-consumer.sh --bootstrap-server flink-window-dgim-traffic_kafka_1:9093 --topic tumble_window_output
+```
+
+```bash
+docker exec -it flink-window-dgim-traffic_kafka_1 kafka-console-consumer.sh --bootstrap-server flink-window-dgim-traffic_kafka_1:9093 --topic sliding_window_output
 ```
 
 Run the jobs

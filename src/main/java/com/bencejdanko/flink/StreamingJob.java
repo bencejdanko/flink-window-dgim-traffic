@@ -1,16 +1,14 @@
-package com.bencejdanko.flink; // Ensure this matches your directory structure and pom.xml groupId
+package com.bencejdanko.flink;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-// Import SLF4J logging classes
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StreamingJob {
 
-    // Initialize the Logger for this class
     private static final Logger LOG = LoggerFactory.getLogger(StreamingJob.class);
 
     public static void main(String[] args) throws Exception {
@@ -31,7 +29,7 @@ public class StreamingJob {
             // --- Configuration ---
             final String kafkaBootstrapServers = "kafka:9093"; // Make sure this is correct and reachable!
             final String sourceTopic = "network_traffic";
-            final String sinkTopic = "output-topic";
+            final String sinkTopic = "tumble_window_output";
             final String consumerGroupId = "flink-dgim-group-java";
             final long windowSeconds = 60L; // 60-second window
 
@@ -58,14 +56,13 @@ public class StreamingJob {
             LOG.info("Kafka source table '{}' created.", sourceTopic);
 
             // 3. Define Kafka Sink Table DDL with updated schema
-            // Changed to use 'upsert-kafka' connector with primary key
             final String sinkDDL = String.format(
                 "CREATE TABLE kafka_sink (" +
-                "  window_end STRING," +      // Window end time
-                "  count_estimate BIGINT," +   // DGIM count estimate (Long -> BIGINT)
+                "  window_end STRING," +
+                "  count_estimate BIGINT," + 
                 "  PRIMARY KEY (window_end) NOT ENFORCED" + // Define window_end as the primary key
                 ") WITH (" +
-                "  'connector' = 'upsert-kafka'," +  // Changed from 'kafka' to 'upsert-kafka'
+                "  'connector' = 'upsert-kafka'," +
                 "  'topic' = '%s'," +
                 "  'properties.bootstrap.servers' = '%s'," +
                 "  'key.format' = 'json'," +   // Format for the key part
@@ -81,7 +78,7 @@ public class StreamingJob {
             tEnv.createTemporarySystemFunction("DGIM_ESTIMATE", new DGIMAggregateFunction(windowSeconds));
             LOG.info("DGIM Aggregate Function registered with window size of {} seconds.", windowSeconds);
 
-            // 5. Define the windowed aggregation SQL - FIXED TUMBLE WINDOW SYNTAX
+            // 5. Define the windowed aggregation SQL
             final String insertSQL =
                 "INSERT INTO kafka_sink " +
                 "SELECT " +
